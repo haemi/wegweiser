@@ -415,19 +415,15 @@ def add_elevation_to_gpx(gpx_filename, output_filename, copernicus):
     gdf.to_file(output_filename, 'GPX', layer='track_points')
 
 
-def enrich_gpx():
+def enrich_gpx(file_path):
     copernicus = CopernicusDEM(raster_paths=['dem/eu_dem_v11_E40N20.TIF'])
 
-    for file_path in os.listdir('data'):
-        if 'DS_Store' in file_path:
-            continue
+    place_name = file_path
+    output_gpx_filename = helpers.optimized_enrich_file(place_name)
 
-        place_name = file_path
-        output_gpx_filename = helpers.optimized_enrich_file(place_name)
+    if os.path.isfile(output_gpx_filename):
+        return
 
-        if os.path.isfile(output_gpx_filename):
-            continue
-
-        input_gpx_filename = helpers.optimized_route_file(place_name)
-        add_elevation_to_gpx(input_gpx_filename, output_gpx_filename, copernicus)
-        print(f'Elevation added to {output_gpx_filename}')
+    input_gpx_filename = helpers.optimized_route_file(place_name)
+    add_elevation_to_gpx(input_gpx_filename, output_gpx_filename, copernicus)
+    print(f'Elevation added to {output_gpx_filename}')

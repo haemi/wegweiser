@@ -17,7 +17,7 @@ max_track_length = 21097
 G, distance_matrix = calculate_distance_matrix.calculate_distance_matrix(place_name)
 
 
-def add_waypoints_to_gpx(gpx_filename, waypoints, output_gpx_filename):
+def add_waypoints_to_gpx(gpx_filename: object, waypoints: object, output_gpx_filename: object) -> object:
     gpx_file = open(gpx_filename, 'r')
     gpx_content = gpx_file.read()
     gpx_file.close()
@@ -67,8 +67,6 @@ def solve_vrp(starting_points, number_of_vehicles):
 
     all_optimized_route_coordinates = []
 
-
-
     new_waypoints = []
 
     pattern = r'Latitude: (\d+\.\d+), Longitude: (\d+\.\d+),.*VWW (\d*.\d*)\.*.*\n'
@@ -77,10 +75,13 @@ def solve_vrp(starting_points, number_of_vehicles):
     lines = f.readlines()
 
     for line in lines:
-        lat = float(re.sub(pattern, r'\1', line))
-        lon = float(re.sub(pattern, r'\2', line))
-        name = re.sub(pattern, r'\3', line)
-        new_waypoints.append((lat, lon, name))
+        try:
+            lat = float(re.sub(pattern, r'\1', line))
+            lon = float(re.sub(pattern, r'\2', line))
+            name = re.sub(pattern, r'\3', line)
+            new_waypoints.append((lat, lon, name))
+        except ValueError:
+            pass
 
     nodes = ox.distance.nearest_nodes(G, X=[x[1] for x in new_waypoints],
                                       Y=[x[0] for x in new_waypoints])
@@ -201,20 +202,32 @@ if __name__ == '__main__':
 
     pattern = r'Latitude: (\d+\.\d+), Longitude: (\d+\.\d+),.*VWW (\d*.\d*)\.*.*\n'
 
-    # print(best_distance)
-    create_gpx_file.create_gpx_file(list(best_routes), f"/Users/stefan/Downloads/{place_name}.gpx")
+    create_gpx_file.create_gpx_file(list(best_routes), helpers.optimized_route_file(place_name))
 
-    f = open(helpers.guideposts_coordinates_file(place_name))
-    lines = f.readlines()
-    f.close()
+    enrich_gpx = __import__('03_enrich_gpx')
+    gpx_info = __import__('04_gpx-info')
+    overlay_hiking_route_with_guideposts = __import__('05_overlay_hiking_route_with_guideposts')
 
-    for line in lines:
-        lat = float(re.sub(pattern, r'\1', line))
-        lon = float(re.sub(pattern, r'\2', line))
-        name = re.sub(pattern, r'\3', line)
-        new_waypoints.append((lat, lon, name))
+    enrich_gpx.enrich_gpx(place_name)
 
-    add_waypoints_to_gpx(f"/Users/stefan/Downloads/{place_name}.gpx", new_waypoints, f"/Users/stefan/Downloads/{place_name}_2.gpx")
+    overlay_hiking_route_with_guideposts.overlay_hiking_route_with_guideposts(place_name)
+
+
+    # f = open(helpers.guideposts_coordinates_file(place_name))
+    # lines = f.readlines()
+    # f.close()
+    #
+    # for line in lines:
+    #     try:
+    #         lat = float(re.sub(pattern, r'\1', line))
+    #         lon = float(re.sub(pattern, r'\2', line))
+    #         name = re.sub(pattern, r'\3', line)
+    #         new_waypoints.append((lat, lon, name))
+    #     except ValueError:
+    #         pass
+    #
+    # add_waypoints_to_gpx(f"/Users/stefan/Downloads/{place_name}.gpx", new_waypoints,
+    #                      f"/Users/stefan/Downloads/{place_name}_2.gpx")
     # print(list(best_routes))
-    print("without GPU:", timer()-start)
+    print("without GPU:", timer() - start)
     print("---")

@@ -1,7 +1,6 @@
 import numpy as np
 import networkx as nx
 import nearest_gps_coordinates_for_guidepoints
-import osmnx as ox
 
 
 def calculate_distance_matrix(place_name):

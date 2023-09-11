@@ -19,33 +19,32 @@ def add_waypoints_to_gpx(gpx_filename, waypoints, output_gpx_filename):
         modified_gpx_file.write(gpx.to_xml())
 
 
-def overlay_hiking_route_with_guideposts():
-    for file_path in os.listdir('data'):
-        if 'DS_Store' in file_path:
-            continue
+def overlay_hiking_route_with_guideposts(file_path):
+    place_name = file_path
+    output_gpx_filename = myhelpers.final_hiking_guideposts_file(place_name)
 
-        place_name = file_path
-        output_gpx_filename = myhelpers.final_hiking_guideposts_file(place_name)
+    if os.path.isfile(output_gpx_filename):
+        return
 
-        if os.path.isfile(output_gpx_filename):
-            continue
+    input_gpx_filename = myhelpers.optimized_enrich_file(place_name)
 
-        input_gpx_filename = myhelpers.optimized_enrich_file(place_name)
+    new_waypoints = []
 
-        new_waypoints = []
+    pattern = r'Latitude: (\d+\.\d+), Longitude: (\d+\.\d+),.*VWW (\d*.\d*)\.*.*\n'
 
-        pattern = r'Latitude: (\d+\.\d+), Longitude: (\d+\.\d+),.*VWW (\d*.\d*)\.*.*\n'
+    # read original file content
+    with open(myhelpers.guideposts_coordinates_file(place_name)) as f:
+        lines = f.readlines()
 
-        # read original file content
-        with open(myhelpers.guideposts_coordinates_file(place_name)) as f:
-            lines = f.readlines()
-
-            for line in lines:
+        for line in lines:
+            try:
                 lat = float(re.sub(pattern, r'\1', line))
                 lon = float(re.sub(pattern, r'\2', line))
                 name = re.sub(pattern, r'\3', line)
                 new_waypoints.append((lat, lon, name))
+            except ValueError:
+                pass
 
-        add_waypoints_to_gpx(input_gpx_filename, new_waypoints, output_gpx_filename)
+    add_waypoints_to_gpx(input_gpx_filename, new_waypoints, output_gpx_filename)
 
-        print(f"hiking route created for {output_gpx_filename}")
+    print(f"hiking route created for {output_gpx_filename}")

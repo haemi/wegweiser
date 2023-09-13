@@ -9,9 +9,10 @@ import multiprocessing
 import itertools
 import gpxpy
 import create_gpx_file
+import math
 from timeit import default_timer as timer
 
-place_name = "Marktgemeinde Lustenau"
+place_name = "Gemeinde Bürs"
 max_track_length = 21097
 
 G, distance_matrix = calculate_distance_matrix.calculate_distance_matrix(place_name)
@@ -138,11 +139,28 @@ def parallel_solve_vrp(starting_points_chunk):
 
     print(f"number of chunks {len(starting_points_chunk)}")
     i = 0
+
+    times_needed = []
+
     for starting_points in starting_points_chunk:
-        print(f"before trying {i}/{len(starting_points_chunk)}")
+        start = timer()
+
         routes_distances_mapping.append((starting_points_chunk, solve_vrp(starting_points, len(starting_points))))
-        print(f"after trying {i}/{len(starting_points_chunk)}")
-        i += len(starting_points)
+
+        needed = timer() - start
+        times_needed.append(needed)
+        amount = 10
+        last_x_elements = times_needed[-10:]
+        average = sum(last_x_elements) / len(last_x_elements)
+        remaining = len(starting_points_chunk) - i
+        remaining_seconds = remaining * average
+        remaining_minutes = math.ceil(remaining_seconds / 60)
+        print(f"after trying {i}/{len(starting_points_chunk)}, time needed: {needed}")
+        print(f"remaining: {remaining}")
+        print(f"average of last {amount} elements: {average}")
+        print(f"so probably it takes us another {remaining_minutes} minutes")
+
+        i += 1
 
     return routes_distances_mapping
 
@@ -162,7 +180,7 @@ if __name__ == '__main__':
     # G, distance_matrix = calculate_distance_matrix.calculate_distance_matrix(place_name)
     print(f"after calculating distance matrix {timer() - start}")
     num_locations = len(distance_matrix)
-    number_of_vehicles = 0
+    number_of_vehicles = 2
     solution_found = False
 
     best_distance = float('inf')
@@ -173,7 +191,7 @@ if __name__ == '__main__':
         number_of_vehicles = number_of_vehicles + 1
         starting_point_combinations = list(itertools.combinations(range(num_locations), number_of_vehicles))
 
-        num_cores = multiprocessing.cpu_count() - 2
+        num_cores = 1 #multiprocessing.cpu_count() - 2
 
         if number_of_vehicles == 1:
             chunks = [(0,)]

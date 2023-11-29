@@ -7,6 +7,7 @@ import networkx as nx
 import gpxpy.gpx
 
 # Step 1: Create a Street Network Graph
+network_type = 'walk'
 place_name = "Lustenau, Vorarlberg, Austria"
 custom_filter = '["highway"!~"motorway|motorway_link"]["access"!~"private"]'
 
@@ -14,7 +15,7 @@ custom_filter = '["highway"!~"motorway|motorway_link"]["access"!~"private"]'
 
 # Create the graph using the custom filter
 # G = ox.graph_from_place(place_name, network_type='drive', custom_filter=custom_filter, simplify=False)
-G = ox.graph_from_place(place_name, network_type='drive', simplify=False)
+G = ox.graph_from_place(place_name, network_type=network_type, simplify=False)
 G_proj = G.to_undirected()
 G = G_proj
 stats = ox.basic_stats(G_proj)
@@ -166,12 +167,12 @@ def add_waypoints_to_gpx(file_path, distance_interval_km):
                 previous_point = point
 
     # Save the modified GPX file
-    with open(f"modified-track-{place_name}.gpx", "w") as mod_file:
+    with open(f"modified-track-{place_name}-{network_type}.gpx", "w") as mod_file:
         mod_file.write(gpx.to_xml())
 
 
 # Path to your GPX file
-gpx_file_path = f"unmodified-track-{place_name}.gpx"
+gpx_file_path = f"unmodified-track-{place_name}-{network_type}.gpx"
 
 # Interval distance in kilometers
 kilometers_per_mile = 1.609344
